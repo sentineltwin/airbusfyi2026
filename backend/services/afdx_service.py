@@ -7,7 +7,7 @@ import logging
 import random
 import time
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Any, Dict, List
 
 log = logging.getLogger("sentineltwin.afdx")
 
@@ -18,7 +18,7 @@ class AFDXMonitor:
     Tracks: BAG enforcement, jitter, bandwidth, frame sequencing.
     """
 
-    VIRTUAL_LINKS = [
+    VIRTUAL_LINKS: List[Dict[str, Any]] = [
         {
             "vl_id": "VL-0100", "bag_ms": 4, "max_frame_bytes": 1518,
             "bw_kbps": 3000, "publisher": "ADIRU-1",

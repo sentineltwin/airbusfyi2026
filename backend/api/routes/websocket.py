@@ -5,7 +5,7 @@ import logging
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
@@ -22,7 +22,7 @@ class ConnectionManager:
         self.total_messages_sent = 0
         self.total_connections = 0
 
-    async def connect(self, ws: WebSocket, channels: List[str] = None) -> str:
+    async def connect(self, ws: WebSocket, channels: Optional[List[str]] = None) -> str:
         await ws.accept()
         conn_id = str(uuid.uuid4())
         async with self._lock:

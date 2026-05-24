@@ -200,10 +200,10 @@ async def lifespan(app: FastAPI):
     log.info("Initiating graceful shutdown sequence")
 
     # Cancel the WebSocket broadcast loop
-    broadcast_task = getattr(app.state, "broadcast_task", None)
-    if broadcast_task:
-        broadcast_task.cancel()
-        await asyncio.gather(broadcast_task, return_exceptions=True)
+    shutdown_task = getattr(app.state, "broadcast_task", None)
+    if shutdown_task:
+        shutdown_task.cancel()
+        await asyncio.gather(shutdown_task, return_exceptions=True)
         log.info("WebSocket broadcast loop stopped")
 
     await sensor_engine.stop()

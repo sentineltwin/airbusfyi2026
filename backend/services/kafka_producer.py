@@ -40,7 +40,7 @@ class KafkaEventProducer:
                 request_timeout_ms=5000,
                 connections_max_idle_ms=30000,
             )
-            await self._producer.start()
+            await self._producer.start()  # type: ignore[attr-defined]
             self._available = True
             log.info("Kafka producer connected to %s", self._bootstrap)
             asyncio.create_task(self._send_worker(), name="kafka_send_worker")

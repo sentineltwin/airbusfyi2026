@@ -29,7 +29,7 @@ def setup_logging(
     root.handlers.clear()
 
     if json_format:
-        formatter = _JsonFormatter()
+        formatter: logging.Formatter = _JsonFormatter()
     else:
         formatter = logging.Formatter(
             fmt="%(asctime)s.%(msecs)03d [%(levelname)8s] %(name)s: %(message)s",

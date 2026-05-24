@@ -152,8 +152,8 @@ def main():
     print("=" * 60)
     if errors:
         print(f"  OFFLINE TESTS: {len(errors)} FAILURE(S)")
-        for e in errors:
-            print(f"    - {e}")
+        for err in errors:
+            print(f"    - {err}")
         sys.exit(1)
     else:
         print("  OFFLINE TESTS: ALL PASSED")

@@ -1,3 +1,4 @@
+# mypy: disable-error-code="valid-type, misc, var-annotated"
 """
 SentinelTwin — Database Models
 PostgreSQL + TimescaleDB schema
@@ -15,7 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship, declarative_base
 
-Base = declarative_base()
+Base = declarative_base()  # type: ignore[valid-type, misc, var-annotated]
 
 
 def utcnow():

@@ -191,7 +191,7 @@ class ARINC429BusSimulator:
     def update_value(self, label_oct: int, value: float):
         self._values[label_oct] = value
 
-    def _encode_label(self, label_oct: int, value: float) -> ARINC429Word:
+    def _encode_label(self, label_oct: int, value: float) -> Optional[ARINC429Word]:
         """Encode a physical value into an ARINC 429 word"""
         label_info = ARINC429_LABELS.get(label_oct)
         if not label_info:
@@ -767,7 +767,7 @@ class SimulatorManager:
 
         asyncio.create_task(_replay_loop(), name="csv_replay")
 
-    async def start_replay(self, flight_phases: List[str] = None,
+    async def start_replay(self, flight_phases: Optional[List[str]] = None,
                            duration_sec: float = 300.0):
         """Start synthetic replay session"""
         phases = flight_phases or ["GROUND", "TAXI", "TAKEOFF", "CLIMB",

@@ -416,7 +416,7 @@ class ValidationPipeline:
 # SENSOR REGISTRY BUILDER
 # ─────────────────────────────────────────────────────────────
 
-ATA_CHAPTERS = {
+ATA_CHAPTERS: Dict[int, Dict[str, Any]] = {
     21: {"name": "AIR CONDITIONING",  "count": 256,  "units": ["°C","kPa","L/s"]},
     22: {"name": "AUTO FLIGHT",       "count": 384,  "units": ["G","Hz","V","A"]},
     24: {"name": "ELECTRICAL",        "count": 512,  "units": ["V","A","Hz"]},
@@ -443,14 +443,14 @@ def build_sensor_registry(aircraft_type: str = "A320neo") -> List[AircraftSensor
     """Build sensor registry for the given aircraft type using its ATA distribution."""
     profile = AIRCRAFT_PROFILES.get(aircraft_type)
     if profile:
-        ata_dist = profile["ata_distribution"]
+        ata_dist: Dict[int, Any] = profile["ata_distribution"]  # type: ignore[assignment]
     else:
         # Fallback to default ATA_CHAPTERS counts
         ata_dist = {ata: info["count"] for ata, info in ATA_CHAPTERS.items()}
 
     sensors = []
     for ata, info in ATA_CHAPTERS.items():
-        count = ata_dist.get(ata, info["count"])
+        count: int = ata_dist.get(ata, info["count"])
         for i in range(count):
             unit = info["units"][i % len(info["units"])]
             redundancy_channel = (i % 3) + 1
@@ -609,7 +609,7 @@ class RedundancyVoter:
         """Get tolerance band for a given ATA chapter"""
         return self.TOLERANCE_BANDS.get(ata_chapter, 0.02)
 
-    def vote(self, readings: List[float], channel_weights: List[float] = None,
+    def vote(self, readings: List[float], channel_weights: Optional[List[float]] = None,
              ata_chapter: int = 0, group_id: str = "") -> VoteResult:
         """
         Perform 2oo3 redundancy vote.
@@ -832,7 +832,7 @@ class SensorExecutionEngine:
 
         log.info(f"SensorExecutionEngine initialized (aircraft: {aircraft_type})")
 
-    async def initialize(self, aircraft_type: str = None):
+    async def initialize(self, aircraft_type: Optional[str] = None):
         """Build sensor registry and initialize pipeline"""
         if aircraft_type:
             self.aircraft_type = aircraft_type
@@ -859,10 +859,11 @@ class SensorExecutionEngine:
                 else self.physics.predict(sensor, self.altitude_ft,
                                           self.speed_kt, self.flight_phase, t) + noise
             )
-            result = self.pipeline.validate(
-                sensor, raw, self.altitude_ft, self.speed_kt, self.flight_phase, t
-            )
-            results.append(result)
+            if self.pipeline:
+                result = self.pipeline.validate(
+                    sensor, raw, self.altitude_ft, self.speed_kt, self.flight_phase, t
+                )
+                results.append(result)
         return results
 
     async def run(self):

@@ -15,7 +15,7 @@ import pytest
 try:
     import websockets
 except ImportError:
-    websockets = None
+    websockets = None  # type: ignore[assignment]
 
 BASE    = "http://localhost:8000/api/v1"
 WS_URL  = "ws://localhost:8000/ws/telemetry"

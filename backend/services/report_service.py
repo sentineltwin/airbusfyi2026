@@ -9,7 +9,7 @@ import io
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 log = logging.getLogger("sentineltwin.reports")
 
@@ -116,7 +116,7 @@ class AirworthinessReportGenerator:
             alignment=TA_CENTER,
         ))
 
-    def generate_pdf(self, report_data: Dict, output_path: str = None) -> bytes:
+    def generate_pdf(self, report_data: Dict, output_path: Optional[str] = None) -> bytes:
         """
         Generate a complete airworthiness report PDF.
         Returns PDF bytes.
