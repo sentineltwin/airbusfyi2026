@@ -1,0 +1,451 @@
+# ═══════════════════════════════════════════════════════════════
+# SentinelTwin — Kubernetes Production Manifests
+# Namespace | Deployments | Services | ConfigMaps | Secrets | HPA
+# ═══════════════════════════════════════════════════════════════
+
+---
+# NAMESPACE
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sentineltwin
+  labels:
+    app.kubernetes.io/name: sentineltwin
+    app.kubernetes.io/part-of: airworthiness-platform
+    compliance: do-326a
+
+---
+# CONFIGMAP — Application Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentineltwin-config
+  namespace: sentineltwin
+data:
+  APP_NAME: "SentinelTwin"
+  VERSION: "4.2.1"
+  DEBUG: "false"
+  HOST: "0.0.0.0"
+  PORT: "8000"
+  WORKERS: "4"
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+  SENSOR_COUNT: "8192"
+  SENSOR_WORKER_COUNT: "16"
+  SENSOR_SAMPLE_RATE_HZ: "20.0"
+  AI_ANOMALY_THRESHOLD: "0.15"
+  AI_LATENT_DIM: "32"
+  HASH_ALGORITHM: "SHA-256"
+  PROMETHEUS_ENABLED: "true"
+  COMPLIANCE_DO326A: "true"
+  COMPLIANCE_ED202A: "true"
+
+---
+# SECRET — Sensitive credentials (use sealed-secrets or Vault in prod)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sentineltwin-secrets
+  namespace: sentineltwin
+type: Opaque
+stringData:
+  DATABASE_URL: "postgresql+asyncpg://sentineltwin:sentinel_secure_pw@postgres-svc:5432/sentineltwin"
+  REDIS_URL: "redis://:sentinel_redis_pw@redis-svc:6379/0"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-svc:9092"
+  SECRET_KEY: "REPLACE_WITH_SECURE_256BIT_KEY_IN_PRODUCTION"
+  BCRYPT_ROUNDS: "12"
+
+---
+# DEPLOYMENT — Backend (FastAPI)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentineltwin-backend
+  namespace: sentineltwin
+  labels:
+    app: sentineltwin-backend
+    version: "4.2.1"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sentineltwin-backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: sentineltwin-backend
+        version: "4.2.1"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: sentineltwin-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: backend
+          image: sentineltwin/backend:4.2.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: sentineltwin-config
+            - secretRef:
+                name: sentineltwin-secrets
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "2Gi"
+            limits:
+              cpu: "4000m"
+              memory: "8Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: logs
+              mountPath: /app/logs
+            - name: reports
+              mountPath: /app/reports
+            - name: models
+              mountPath: /app/models
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: logs
+          persistentVolumeClaim:
+            claimName: sentineltwin-logs-pvc
+        - name: reports
+          persistentVolumeClaim:
+            claimName: sentineltwin-reports-pvc
+        - name: models
+          configMap:
+            name: sentineltwin-models
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values: [sentineltwin-backend]
+                topologyKey: kubernetes.io/hostname
+
+---
+# SERVICE — Backend
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentineltwin-backend-svc
+  namespace: sentineltwin
+  labels:
+    app: sentineltwin-backend
+spec:
+  selector:
+    app: sentineltwin-backend
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+  type: ClusterIP
+
+---
+# DEPLOYMENT — Frontend (React/Nginx)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentineltwin-frontend
+  namespace: sentineltwin
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sentineltwin-frontend
+  template:
+    metadata:
+      labels:
+        app: sentineltwin-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: sentineltwin/frontend:4.2.1
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+
+---
+# SERVICE — Frontend
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentineltwin-frontend-svc
+  namespace: sentineltwin
+spec:
+  selector:
+    app: sentineltwin-frontend
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
+
+---
+# INGRESS — Nginx Ingress Controller
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sentineltwin-ingress
+  namespace: sentineltwin
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+    nginx.ingress.kubernetes.io/proxy-body-size: "64m"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Permissions-Policy: camera=(), microphone=(), geolocation=()";
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - sentineltwin.airbus.internal
+      secretName: sentineltwin-tls
+  rules:
+    - host: sentineltwin.airbus.internal
+      http:
+        paths:
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: sentineltwin-backend-svc
+                port:
+                  number: 8000
+          - path: /ws/
+            pathType: Prefix
+            backend:
+              service:
+                name: sentineltwin-backend-svc
+                port:
+                  number: 8000
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: sentineltwin-backend-svc
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sentineltwin-frontend-svc
+                port:
+                  number: 3000
+
+---
+# HORIZONTAL POD AUTOSCALER — Backend
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: sentineltwin-backend-hpa
+  namespace: sentineltwin
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sentineltwin-backend
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
+
+---
+# PERSISTENT VOLUME CLAIMS
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sentineltwin-logs-pvc
+  namespace: sentineltwin
+spec:
+  accessModes: [ReadWriteMany]
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sentineltwin-reports-pvc
+  namespace: sentineltwin
+spec:
+  accessModes: [ReadWriteMany]
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: standard
+
+---
+# SERVICE ACCOUNT
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sentineltwin-sa
+  namespace: sentineltwin
+
+---
+# NETWORK POLICY — Restrict ingress to backend (only nginx + monitoring)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sentineltwin-backend-netpol
+  namespace: sentineltwin
+spec:
+  podSelector:
+    matchLabels:
+      app: sentineltwin-backend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: sentineltwin-nginx
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: sentineltwin-postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app: sentineltwin-redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:
+        - podSelector:
+            matchLabels:
+              app: sentineltwin-kafka
+      ports:
+        - protocol: TCP
+          port: 9092
+    # Allow DNS
+    - ports:
+        - protocol: UDP
+          port: 53
+
+---
+# POD DISRUPTION BUDGET — Backend (maintain ≥1 pod during rolling updates)
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sentineltwin-backend-pdb
+  namespace: sentineltwin
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: sentineltwin-backend
+
+---
+# SERVICE MONITOR — Prometheus scrape config for k8s
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sentineltwin-backend
+  namespace: sentineltwin
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: sentineltwin-backend
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s

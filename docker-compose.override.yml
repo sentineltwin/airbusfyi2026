@@ -1,0 +1,59 @@
+# ═══════════════════════════════════════════════════════════════
+# SentinelTwin — Development Override
+# Usage: docker compose up  (automatically merges with docker-compose.yml)
+# ═══════════════════════════════════════════════════════════════
+# This file overrides production settings for local development:
+# - Exposes all ports for direct access (no nginx proxy needed)
+# - Mounts source code for hot-reload
+# - Sets DEBUG=true and relaxed auth settings
+# - Reduces resource limits for laptop-friendly operation
+# - Disables production-grade replicas
+
+version: "3.9"
+
+services:
+
+  postgres:
+    ports:
+      - "5432:5432"   # Direct DB access for local tools (TablePlus, DBeaver)
+
+  redis:
+    ports:
+      - "6379:6379"   # Direct Redis access (redis-cli)
+
+  kafka:
+    ports:
+      - "9092:9092"   # Direct Kafka access (kafka-ui, kafkacat)
+
+  zookeeper:
+    ports:
+      - "2181:2181"
+
+  prometheus:
+    ports:
+      - "9090:9090"
+
+  grafana:
+    ports:
+      - "3001:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"     # No login for local Grafana
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+
+  # Backend: run from source with hot-reload (uvicorn --reload)
+  # In dev we DON'T run backend in Docker — use start_sentineltwin.sh instead.
+  # Uncomment below only if you want full-docker dev:
+  #
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     target: builder          # Use builder stage (includes dev deps)
+  #   volumes:
+  #     - ./backend:/app         # Hot-reload source mount
+  #   environment:
+  #     DEBUG: "true"
+  #     LOG_LEVEL: "DEBUG"
+  #     RELOAD: "true"
+  #   command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+  #   ports:
+  #     - "8000:8000"

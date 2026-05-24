@@ -1,0 +1,315 @@
+{
+  "__inputs": [{ "name": "DS_PROMETHEUS", "label": "Prometheus", "type": "datasource", "pluginId": "prometheus" }],
+  "__requires": [{ "type": "grafana", "id": "grafana", "version": "10.0.0" }],
+  "id": null,
+  "uid": "sentineltwin-ops",
+  "title": "SentinelTwin — Operational Dashboard",
+  "tags": ["sentineltwin", "aerospace", "do-326a"],
+  "timezone": "utc",
+  "schemaVersion": 38,
+  "version": 2,
+  "refresh": "5s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Total Sensors",
+      "gridPos": { "h": 4, "w": 3, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "#00b4ff" }, "unit": "short" } },
+      "targets": [{ "expr": "sentineltwin_sensor_count_total", "refId": "A" }]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Healthy Sensors",
+      "gridPos": { "h": 4, "w": 3, "x": 3, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{"color":"red","value":0},{"color":"yellow","value":7800},{"color":"green","value":8000}] }, "unit": "short" } },
+      "targets": [{ "expr": "sentineltwin_sensor_healthy_count", "refId": "A" }]
+    },
+    {
+      "id": 3, "type": "stat", "title": "Sensor Health %",
+      "gridPos": { "h": 4, "w": 3, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{"color":"red","value":0},{"color":"yellow","value":90},{"color":"green","value":97}] }, "unit": "percent", "min": 0, "max": 100 } },
+      "targets": [{ "expr": "sentineltwin_sensor_health_pct", "refId": "A" }]
+    },
+    {
+      "id": 4, "type": "stat", "title": "AI Confidence",
+      "gridPos": { "h": 4, "w": 3, "x": 9, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{"color":"red","value":0},{"color":"yellow","value":0.85},{"color":"green","value":0.92}] }, "unit": "percentunit" } },
+      "targets": [{ "expr": "sentineltwin_ai_confidence", "refId": "A" }]
+    },
+    {
+      "id": 5, "type": "stat", "title": "Scan Rate",
+      "gridPos": { "h": 4, "w": 3, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "#00b4ff" }, "unit": "ops" } },
+      "targets": [{ "expr": "sentineltwin_scan_rate_total", "refId": "A" }]
+    },
+    {
+      "id": 6, "type": "stat", "title": "Active ECAM",
+      "gridPos": { "h": 4, "w": 3, "x": 15, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{"color":"green","value":0},{"color":"yellow","value":1},{"color":"red","value":5}] }, "unit": "short" } },
+      "targets": [{ "expr": "sentineltwin_ecam_active_count", "refId": "A" }]
+    },
+    {
+      "id": 7, "type": "stat", "title": "Hash Chain Blocks",
+      "gridPos": { "h": 4, "w": 3, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "#00e676" }, "unit": "short" } },
+      "targets": [{ "expr": "sentineltwin_hash_chain_blocks_total", "refId": "A" }]
+    },
+    {
+      "id": 8, "type": "stat", "title": "WebSocket Connections",
+      "gridPos": { "h": 4, "w": 3, "x": 21, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "#8bc34a" }, "unit": "short" } },
+      "targets": [{ "expr": "sentineltwin_websocket_connections_active", "refId": "A" }]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Sensor Health Over Time",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "percent" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Health %" }, "properties": [{ "id": "color", "value": { "fixedColor": "#00e676", "mode": "fixed" } }] }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "showLegend": true } },
+      "targets": [
+        { "expr": "sentineltwin_sensor_health_pct", "legendFormat": "Health %", "refId": "A" },
+        { "expr": "sentineltwin_ai_confidence * 100", "legendFormat": "AI Confidence %", "refId": "B" }
+      ]
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "AI Reconstruction Error",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "#00b4ff" }, "unit": "short", "custom": { "lineWidth": 1 } } },
+      "targets": [
+        { "expr": "sentineltwin_ai_reconstruction_error", "legendFormat": "Reconstruction Error", "refId": "A" },
+        { "expr": "0.15", "legendFormat": "Threshold", "refId": "B" }
+      ]
+    },
+    {
+      "id": 12, "type": "barchart", "title": "Sensor States by ATA Chapter",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "orientation": "horizontal", "groupWidth": 0.7 },
+      "targets": [
+        { "expr": "sum by (ata_chapter) (sentineltwin_sensor_state_count{state='HEALTHY'})", "legendFormat": "Healthy — ATA {{ata_chapter}}", "refId": "A" },
+        { "expr": "sum by (ata_chapter) (sentineltwin_sensor_state_count{state='DEGRADED'})", "legendFormat": "Degraded — ATA {{ata_chapter}}", "refId": "B" },
+        { "expr": "sum by (ata_chapter) (sentineltwin_sensor_state_count{state='FAILED'})", "legendFormat": "Failed — ATA {{ata_chapter}}", "refId": "C" }
+      ]
+    },
+    {
+      "id": 13, "type": "timeseries", "title": "API Request Latency (p50/p95/p99)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{app='sentineltwin'}[5m])) * 1000", "legendFormat": "p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{app='sentineltwin'}[5m])) * 1000", "legendFormat": "p95", "refId": "B" },
+        { "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{app='sentineltwin'}[5m])) * 1000", "legendFormat": "p99", "refId": "C" }
+      ]
+    },
+    {
+      "id": 14, "type": "timeseries", "title": "Hash Chain Append Rate",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "#00e676" }, "unit": "ops" } },
+      "targets": [{ "expr": "rate(sentineltwin_hash_chain_blocks_total[1m])", "legendFormat": "Blocks/sec", "refId": "A" }]
+    },
+    {
+      "id": 9, "type": "logs", "title": "Operational Event Log",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "showTime": true, "showLabels": true, "wrapLogMessage": false, "sortOrder": "Descending" },
+      "targets": [{ "expr": "{app='sentineltwin', level=~'warn|error'}", "refId": "A" }]
+    },
+    {
+      "id": 15, "type": "gauge", "title": "Dispatch Readiness Score",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "orange", "value": 70 },
+              { "color": "green", "value": 90 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false
+      },
+      "targets": [
+        { "expr": "dispatch_readiness_score", "legendFormat": "Score", "refId": "A" }
+      ]
+    },
+    {
+      "id": 16, "type": "stat", "title": "ECAM Advisories by Severity",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 3 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "EMERGENCY" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "WARNING" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "CAUTION" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        { "expr": "ecam_active_advisories{severity='EMERGENCY'}", "legendFormat": "EMERGENCY", "refId": "A" },
+        { "expr": "ecam_active_advisories{severity='WARNING'}", "legendFormat": "WARNING", "refId": "B" },
+        { "expr": "ecam_active_advisories{severity='CAUTION'}", "legendFormat": "CAUTION", "refId": "C" }
+      ]
+    },
+    {
+      "id": 17, "type": "timeseries", "title": "Kafka Producer Queue Depth",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 44 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "short",
+          "custom": { "fillOpacity": 20, "lineWidth": 2 }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }
+      },
+      "targets": [
+        { "expr": "kafka_producer_queue_depth", "legendFormat": "Queue Depth", "refId": "A" }
+      ]
+    },
+    {
+      "id": 18, "type": "table", "title": "Persistence Worker Stats",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 44 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              { "id": "unit", "value": "ops" },
+              { "id": "decimals", "value": 2 }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Value", "desc": true }]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "renameByName": { "__name__": "Metric" }
+          }
+        }
+      ],
+      "targets": [
+        { "expr": "rate(sensor_validations_total[1m])", "legendFormat": "Validations/sec", "refId": "A", "format": "table", "instant": true }
+      ]
+    },
+    {
+      "id": 19, "type": "timeseries", "title": "Memory & CPU Usage",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 52 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 10, "lineWidth": 2 }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "RSS MB" },
+            "properties": [
+              { "id": "unit", "value": "decmbytes" },
+              { "id": "color", "value": { "fixedColor": "#00b4ff", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "CPU %" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "color", "value": { "fixedColor": "#ff5722", "mode": "fixed" } },
+              { "id": "custom.axisPlacement", "value": "right" }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }
+      },
+      "targets": [
+        { "expr": "process_resident_memory_bytes / 1024 / 1024", "legendFormat": "RSS MB", "refId": "A" },
+        { "expr": "rate(process_cpu_seconds_total[30s]) * 100", "legendFormat": "CPU %", "refId": "B" }
+      ]
+    },
+    {
+      "id": 20, "type": "timeseries", "title": "WS Messages per Second",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 52 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "#e040fb" },
+          "unit": "ops",
+          "custom": { "fillOpacity": 15, "lineWidth": 2, "gradientMode": "opacity" }
+        }
+      },
+      "options": {
+        "tooltip": { "mode": "single" },
+        "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }
+      },
+      "targets": [
+        { "expr": "rate(websocket_messages_total[1m])", "legendFormat": "WS msg/sec", "refId": "A" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+# SentinelTwin — Deployment Guide
+
+**Version:** 4.2.1 | **Updated:** `2026-05-21T06:22:00Z`
+
+---
+
+## Prerequisites
+
+| Tool | Version | Required |
+|------|---------|----------|
+| Python | 3.9+ | ✅ Required |
+| Node.js | 18+ | ✅ Required (frontend) |
+| Docker | 24+ | ⚡ Recommended |
+| Docker Compose | v2 | ⚡ Recommended |
+| OpenSSL | Any | Optional (TLS certs) |
+| NVIDIA GPU | CUDA 12 | Optional (AI acceleration) |
+
+---
+
+## One-Click Startup
+
+### Option A: Python (Cross-Platform — Recommended)
+
+```bash
+python launch.py
+```
+
+Arguments:
+| Argument | Effect |
+|----------|--------|
+| `--mode local` | Skip Docker, run backend + frontend only |
+| `--mode docker` | Force Docker full-stack mode |
+| `--no-browser` | Don't auto-open browser |
+| `--check-only` | Health check without starting services |
+| `--stop` | Gracefully stop all services |
+
+### Option B: Windows Batch
+
+```cmd
+start_sentineltwin.bat
+start_sentineltwin.bat --local
+start_sentineltwin.bat --stop
+```
+
+### Option C: Linux / macOS Shell
+
+```bash
+chmod +x start_sentineltwin.sh
+./start_sentineltwin.sh
+./start_sentineltwin.sh --local
+./start_sentineltwin.sh --stop
+```
+
+### Option D: Docker Compose (Infrastructure only)
+
+```bash
+docker compose up -d                    # Start all services
+docker compose up -d postgres redis     # Infrastructure only
+docker compose logs -f backend          # Stream logs
+docker compose down                     # Stop all
+```
+
+### Option E: Make (Full automation)
+
+```bash
+make init     # First-time setup (deps + infra + migrations + seed)
+make dev      # Start backend + frontend dev servers
+make up       # Start Docker infrastructure only
+make down     # Stop everything
+make test     # Run test suite
+make health   # Check all service health endpoints
+make logs     # Stream all service logs
+```
+
+---
+
+## First-Time Setup (Step by Step)
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository_url>
+cd sentineltwin
+```
+
+### 2. Configure Environment
+
+```bash
+cp .env.example backend/.env
+# Edit backend/.env — REQUIRED: change SECRET_KEY
+```
+
+> ⚠️ **CRITICAL:** Replace `REPLACE_WITH_CRYPTOGRAPHICALLY_SECURE_256BIT_KEY` with a real 256-bit secret:
+> ```bash
+> python3 -c "import secrets; print(secrets.token_hex(32))"
+> ```
+
+### 3. Start the Platform
+
+```bash
+python launch.py
+```
+
+This handles all 22 startup steps automatically.
+
+---
+
+## Manual Backend Setup
+
+```bash
+cd backend
+pip install -r requirements.txt
+python -m alembic upgrade head
+python main.py
+# Backend available at: http://localhost:8000
+```
+
+## Manual Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+# Frontend available at: http://localhost:5173
+```
+
+---
+
+## Production Deployment
+
+### Pre-Deployment Checklist
+
+```bash
+python3 scripts/production_check.py
+```
+
+Critical items:
+- [ ] `SECRET_KEY` changed in `backend/.env`
+- [ ] All default passwords changed
+- [ ] `DEBUG=false` in `.env`
+- [ ] TLS certificates from trusted CA
+- [ ] Firewall: only 443/8000 exposed
+- [ ] Database backups scheduled
+
+### Docker Production Stack
+
+```bash
+docker compose -f docker-compose.yml up -d
+```
+
+Services started:
+| Container | Port | Description |
+|-----------|------|-------------|
+| `postgres` | 5432 | TimescaleDB |
+| `redis` | 6379 | Cache + sessions |
+| `kafka` | 9092 | Event streaming |
+| `zookeeper` | 2181 | Kafka coordination |
+| `backend` | 8000 | FastAPI application |
+| `frontend` | 3000 | React (Nginx) |
+| `nginx` | 80/443 | Reverse proxy |
+| `prometheus` | 9090 | Metrics collection |
+| `grafana` | 3001 | Dashboards |
+
+### Kubernetes Deployment
+
+```bash
+make k8s-apply     # Deploy to cluster
+make k8s-status    # Check rollout status
+make k8s-logs      # Stream backend logs
+make k8s-rollout   # Watch rollout
+make k8s-delete    # Remove all resources
+```
+
+---
+
+## Auto-Recovery
+
+The `launch.py` script runs a **watchdog daemon** that:
+- Monitors backend and frontend processes every 10 seconds
+- Auto-restarts crashed services (max 5 restarts per service)
+- Logs all incidents to `docs/INCIDENT_REPORTS.md`
+- Updates `docs/RUNTIME_STATUS.md` every 30 seconds
+
+---
+
+## Troubleshooting
+
+### Backend fails to start
+
+```bash
+# Check error log:
+cat logs/backend.log
+
+# Common fixes:
+docker compose up -d postgres redis    # Ensure infra is running
+cd backend && python -m alembic upgrade head   # Apply migrations
+python3 scripts/production_check.py   # Full diagnosis
+```
+
+### Port conflicts
+
+```bash
+# Windows:
+netstat -ano | findstr "8000"
+taskkill /PID <pid> /F
+
+# Linux:
+lsof -i :8000
+kill $(lsof -t -i :8000)
+
+# Or let the launcher handle it:
+python launch.py --stop && python launch.py
+```
+
+### Frontend won't start
+
+```bash
+cd frontend && npm install    # Reinstall dependencies
+rm -rf node_modules && npm install   # Clean reinstall
+cat logs/frontend.log        # Check errors
+```
+
+### Database connection refused
+
+```bash
+docker compose up -d postgres
+docker compose exec postgres pg_isready -U sentineltwin
+docker compose exec postgres psql -U sentineltwin -c "\dt"
+```
+
+---
+
+*Auto-generated by `generate_docs.py` — 2026-05-21T06:22:00Z*
