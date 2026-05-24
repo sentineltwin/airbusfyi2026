@@ -79,7 +79,7 @@ SentinelTwin is a **real-time aerospace digital twin and airworthiness assurance
 |---------|---------|-------------|
 | **Airbus A320neo** (default) | 8,192 | 21, 22, 24, 27, 28, 29, 30, 31, 32, 34, 36, 49, 52, 71 |
 | Airbus A350-900 | 8,192 | Extended set |
-| Boeing 737 MAX | 8,192 | Extended set |
+
 
 ---
 
