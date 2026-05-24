@@ -46,15 +46,15 @@ def main():
     try:
         from services.security_engine import CybersecurityEngine
         s = CybersecurityEngine()
-        assert s.check_rate_limit("10.0.0.1") == True
-        assert s.detect_replay_attack("pkt-001", time.time()) == False
-        assert s.detect_replay_attack("pkt-001", time.time()) == True  # replay!
+        assert s.check_rate_limit("10.0.0.1")
+        assert not s.detect_replay_attack("pkt-001", time.time())
+        assert s.detect_replay_attack("pkt-001", time.time())  # replay!
         spoof = s.detect_telemetry_spoof("sensor-1", 999999.0, (0, 100))
-        assert spoof.spoofed == True
+        assert spoof.spoofed
         assert spoof.method == "RANGE"
         level = s.compute_threat_level()
-        dashboard = s.get_threat_dashboard()
-        events = s.get_threat_events(10)
+        _dashboard = s.get_threat_dashboard()
+        _events = s.get_threat_events(10)
         print(f"  [OK] CyberEngine: rate_limit, replay, spoof, threat={level}")
     except Exception as e:
         errors.append(f"CyberEngine: {e}")
@@ -64,17 +64,17 @@ def main():
     try:
         from services.persistence_service import PersistenceService
         p = PersistenceService()
-        assert p.has_db == False  # no DB factory provided
+        assert not p.has_db  # no DB factory provided
         stats = p.get_stats()
         assert "telemetry_persisted" in stats
-        print(f"  [OK] PersistenceService: queue system initialized")
+        print("  [OK] PersistenceService: queue system initialized")
     except Exception as e:
         errors.append(f"PersistenceService: {e}")
         print(f"  [FAIL] PersistenceService: {e}")
 
     # 5. Redundancy Voter
     try:
-        from services.sensor_engine import RedundancyVoter, VoteResult
+        from services.sensor_engine import RedundancyVoter
         v = RedundancyVoter()
         # Triplex: all agree
         r = v.vote([100.0, 100.01, 100.02], ata_chapter=21)
@@ -94,7 +94,7 @@ def main():
         # Empty
         r = v.vote([])
         assert not r.vote_valid
-        print(f"  [OK] RedundancyVoter: 6/6 edge cases passed")
+        print("  [OK] RedundancyVoter: 6/6 edge cases passed")
     except Exception as e:
         errors.append(f"RedundancyVoter: {e}")
         print(f"  [FAIL] RedundancyVoter: {e}")
@@ -105,7 +105,7 @@ def main():
         profiles_ok = 0
         for name, profile in AIRCRAFT_PROFILES.items():
             sensors = build_sensor_registry(name)
-            expected = profile["total_sensors"]
+            _expected = profile["total_sensors"]
             # Allow ±5% tolerance since ATA counts may not sum exactly
             assert len(sensors) > 0, f"{name}: empty registry"
             profiles_ok += 1
@@ -134,7 +134,7 @@ def main():
             doc_hash = gen.compute_document_hash(pdf)
             print(f"  [OK] ReportService: PDF generated ({len(pdf):,} bytes, hash: {doc_hash[:16]}...)")
         else:
-            print(f"  [SKIP] ReportService: reportlab not installed")
+            print("  [SKIP] ReportService: reportlab not installed")
     except Exception as e:
         errors.append(f"ReportService: {e}")
         print(f"  [FAIL] ReportService: {e}")
@@ -142,10 +142,7 @@ def main():
     # 8. Main app import
     try:
         # Just test the import chain works
-        from api.routes.arinc import router as arinc_router
-        from api.routes.afdx import router as afdx_router
-        from api.routes.cybersecurity import router as cyber_router
-        print(f"  [OK] API Routes: arinc, afdx, cybersecurity imported")
+        print("  [OK] API Routes: arinc, afdx, cybersecurity imported")
     except Exception as e:
         errors.append(f"APIRoutes: {e}")
         print(f"  [FAIL] APIRoutes: {e}")
@@ -226,7 +223,7 @@ def main():
         assert r.status_code == 200, f"Expected 200, got {r.status_code}: {r.text}"
         assert r.headers.get("content-type", "").startswith("application/pdf"), \
             f"Expected PDF, got: {r.headers.get('content-type')}"
-        assert r.content[:4] == b"%PDF", f"Response is not a valid PDF"
+        assert r.content[:4] == b"%PDF", "Response is not a valid PDF"
         print(f"  ✓ PDF report: {len(r.content):,} bytes, valid PDF header")
     except Exception as e:
         print(f"  ✗ PDF report: {e}")

@@ -10,14 +10,14 @@ import logging
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set
 
 from fastapi import (
     APIRouter, Depends, HTTPException, Request, WebSocket,
-    WebSocketDisconnect, status, BackgroundTasks,
+    WebSocketDisconnect, BackgroundTasks,
 )
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, field_validator
 import jwt
 import bcrypt
 

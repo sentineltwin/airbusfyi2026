@@ -4,15 +4,14 @@ Real-time threat detection: rate limiting, replay attacks, telemetry spoofing,
 frozen telemetry detection, and threat level computation.
 """
 
-import hashlib
 import logging
 import math
 import random
 import time
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Tuple
 
 log = logging.getLogger("sentineltwin.security")
 

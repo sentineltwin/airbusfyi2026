@@ -338,12 +338,18 @@ class ValidationPipeline:
 
         # ── Stage 11: Confidence scoring ──────────────────────
         confidence = 1.0
-        if flags["sigma_outlier"]: confidence -= 0.2
-        if not flags["timing_valid"]: confidence -= 0.15
-        if flags["stale"]: confidence -= 0.35
-        if flags["replay_attack"]: confidence -= 0.5
-        if not flags["physics_valid"]: confidence -= 0.25
-        if flags["drift_detected"]: confidence -= 0.1
+        if flags["sigma_outlier"]:
+            confidence -= 0.2
+        if not flags["timing_valid"]:
+            confidence -= 0.15
+        if flags["stale"]:
+            confidence -= 0.35
+        if flags["replay_attack"]:
+            confidence -= 0.5
+        if not flags["physics_valid"]:
+            confidence -= 0.25
+        if flags["drift_detected"]:
+            confidence -= 0.1
         confidence = max(0.0, min(1.0, confidence))
 
         # ── Stage 12: Anomaly classification ─────────────────

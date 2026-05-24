@@ -76,10 +76,14 @@ async def sensor_summary(request: Request, user: Dict = Depends(get_current_user
             ata_breakdown[ata] = {"total": 0, "healthy": 0, "degraded": 0, "failed": 0, "other": 0}
         ata_breakdown[ata]["total"] += 1
         state = sensor.state.value if hasattr(sensor.state, "value") else str(sensor.state)
-        if state == "HEALTHY": ata_breakdown[ata]["healthy"] += 1
-        elif state == "DEGRADED": ata_breakdown[ata]["degraded"] += 1
-        elif state == "FAILED": ata_breakdown[ata]["failed"] += 1
-        else: ata_breakdown[ata]["other"] += 1
+        if state == "HEALTHY":
+            ata_breakdown[ata]["healthy"] += 1
+        elif state == "DEGRADED":
+            ata_breakdown[ata]["degraded"] += 1
+        elif state == "FAILED":
+            ata_breakdown[ata]["failed"] += 1
+        else:
+            ata_breakdown[ata]["other"] += 1
     return {
         "total_sensors": stats.get("total_sensors", 8192),
         "healthy_count": stats.get("healthy_count", 0),
@@ -170,7 +174,7 @@ async def redundancy_status(
             continue
         readings = [float(s.last_calibrated_value) for s in group_sensors]
         ata = group_sensors[0].ata_chapter
-        eng_range = float(
+        _eng_range = float(
             group_sensors[0].max_limit - group_sensors[0].min_limit
         ) if hasattr(group_sensors[0], "max_limit") else 100.0
 

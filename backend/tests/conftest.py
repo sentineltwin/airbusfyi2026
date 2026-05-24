@@ -5,7 +5,6 @@ Applies to both test_suite.py (unit) and test_e2e.py (integration).
 
 import os
 import sys
-import asyncio
 import pytest
 from pathlib import Path
 

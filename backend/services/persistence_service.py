@@ -6,10 +6,9 @@ Never blocks the sensor loop — uses asyncio.Queue for hand-off.
 
 import asyncio
 import logging
-import time
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 log = logging.getLogger("sentineltwin.persistence")
 

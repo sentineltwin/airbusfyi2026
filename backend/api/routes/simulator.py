@@ -1,6 +1,6 @@
 """SentinelTwin — Simulator Routes"""
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from api.routes._auth_utils import get_current_user, require_role

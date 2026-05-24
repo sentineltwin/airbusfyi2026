@@ -4,18 +4,16 @@ X-Plane UDP | MSFS SimConnect | ARINC 429 Bus Simulator | Replay Engine
 """
 
 import asyncio
-import hashlib
-import json
 import logging
 import random
 import socket
 import struct
 import time
 from collections import deque
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional
 
 log = logging.getLogger("sentineltwin.simulator")
 

@@ -9,7 +9,7 @@ import json
 import logging
 import math
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 import random
@@ -547,7 +547,7 @@ class DigitalTwinEngine:
         flow1 = self.twin.eng1.fuel_flow_kgh if self.twin.eng1 else 450
         flow2 = self.twin.eng2.fuel_flow_kgh if self.twin.eng2 else 450
         # Burn at 1/3600 rate per second
-        dt = self.UPDATE_SEC
+        _dt = self.UPDATE_SEC
         left = max(0, 9000 - (flow1 * self.twin.session_elapsed_sec / 3600))
         right = max(0, 8900 - (flow2 * self.twin.session_elapsed_sec / 3600))
         center = max(0, 5000 - ((flow1 + flow2) * 0.2 * self.twin.session_elapsed_sec / 3600))

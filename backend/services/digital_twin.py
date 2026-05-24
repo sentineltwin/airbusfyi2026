@@ -8,7 +8,7 @@ import logging
 import math
 import random
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Dict, Optional
 
@@ -164,26 +164,41 @@ class DigitalTwinEngine:
         tw = self.twin
         t = self._t
         if phase == "GROUND":
-            tw.altitude_ft = 0.0; tw.ias_kt = 0.0; tw.vertical_speed_fpm = 0.0; tw.pitch_deg = 0.0
+            tw.altitude_ft = 0.0
+            tw.ias_kt = 0.0
+            tw.vertical_speed_fpm = 0.0
+            tw.pitch_deg = 0.0
         elif phase == "TAXI":
-            tw.altitude_ft = 0.0; tw.ias_kt = min(20, elapsed * 2); tw.heading_deg = (tw.heading_deg + 0.5) % 360
+            tw.altitude_ft = 0.0
+            tw.ias_kt = min(20, elapsed * 2)
+            tw.heading_deg = (tw.heading_deg + 0.5) % 360
         elif phase == "TAKEOFF":
-            tw.ias_kt = min(180, elapsed * 5); tw.altitude_ft = max(0, (tw.ias_kt - 140) * 50)
+            tw.ias_kt = min(180, elapsed * 5)
+            tw.altitude_ft = max(0, (tw.ias_kt - 140) * 50)
             tw.pitch_deg = min(15, (tw.ias_kt - 140) * 0.5) if tw.ias_kt > 140 else 0
             tw.vertical_speed_fpm = max(0, (tw.ias_kt - 140) * 100)
         elif phase == "CLIMB":
-            tw.ias_kt = 250 + math.sin(t / 30) * 5; tw.altitude_ft = min(39000, tw.altitude_ft + 200)
-            tw.vertical_speed_fpm = 2200 + math.sin(t / 20) * 100; tw.pitch_deg = 8 + math.sin(t / 15)
+            tw.ias_kt = 250 + math.sin(t / 30) * 5
+            tw.altitude_ft = min(39000, tw.altitude_ft + 200)
+            tw.vertical_speed_fpm = 2200 + math.sin(t / 20) * 100
+            tw.pitch_deg = 8 + math.sin(t / 15)
         elif phase == "CRUISE":
-            tw.ias_kt = 250 + math.sin(t / 40) * 3; tw.altitude_ft = min(39000, tw.altitude_ft + 10)
-            tw.vertical_speed_fpm = math.sin(t / 60) * 50; tw.pitch_deg = 2 + math.sin(t / 30) * 0.5
-            tw.latitude += 0.001; tw.longitude += 0.0008
+            tw.ias_kt = 250 + math.sin(t / 40) * 3
+            tw.altitude_ft = min(39000, tw.altitude_ft + 10)
+            tw.vertical_speed_fpm = math.sin(t / 60) * 50
+            tw.pitch_deg = 2 + math.sin(t / 30) * 0.5
+            tw.latitude += 0.001
+            tw.longitude += 0.0008
         elif phase == "DESCENT":
-            tw.ias_kt = max(220, tw.ias_kt - 1); tw.altitude_ft = max(0, tw.altitude_ft - 800)
-            tw.vertical_speed_fpm = -2500 + math.cos(t / 20) * 100; tw.pitch_deg = -3 + math.sin(t / 20) * 0.5
+            tw.ias_kt = max(220, tw.ias_kt - 1)
+            tw.altitude_ft = max(0, tw.altitude_ft - 800)
+            tw.vertical_speed_fpm = -2500 + math.cos(t / 20) * 100
+            tw.pitch_deg = -3 + math.sin(t / 20) * 0.5
         elif phase in ("APPROACH", "LANDING"):
-            tw.ias_kt = max(140, tw.ias_kt - 2); tw.altitude_ft = max(0, tw.altitude_ft - 300)
-            tw.vertical_speed_fpm = -700; tw.pitch_deg = -2
+            tw.ias_kt = max(140, tw.ias_kt - 2)
+            tw.altitude_ft = max(0, tw.altitude_ft - 300)
+            tw.vertical_speed_fpm = -700
+            tw.pitch_deg = -2
         # Compute TAS first — Mach depends on it, not the other way around.
         tw.tas_kt = tw.ias_kt * math.sqrt(
             288.15 / max(1, self.twin.atmosphere.temperature_c + 273.15)
@@ -283,7 +298,6 @@ class DigitalTwinEngine:
         Wing bending moment increases with lift (proportional to altitude/speed).
         """
         tw = self.twin
-        speed = tw.ias_kt
         alt = tw.altitude_ft
 
         # G-load by phase

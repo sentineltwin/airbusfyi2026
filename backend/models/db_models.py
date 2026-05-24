@@ -10,11 +10,10 @@ from datetime import datetime, timezone
 
 from sqlalchemy import (
     Boolean, Column, DateTime, Enum, Float, ForeignKey,
-    Index, Integer, JSON, LargeBinary, String, Text, UniqueConstraint,
+    Index, Integer, LargeBinary, String, Text, UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship, declarative_base
-from sqlalchemy.sql import func
 
 Base = declarative_base()
 

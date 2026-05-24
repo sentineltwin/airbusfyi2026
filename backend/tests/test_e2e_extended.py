@@ -24,7 +24,6 @@ if the backend is not reachable.
 """
 
 import json
-import time
 import threading
 import pytest
 import requests
@@ -482,7 +481,7 @@ class TestRBAC:
                              headers=pilot_headers, timeout=TIMEOUT)
             if r.status_code == 200:
                 return
-        assert False, f"Neither /ecam/active nor /ecam/messages returned 200"
+        assert False, "Neither /ecam/active nor /ecam/messages returned 200"
 
 
 # ══════════════════════════════════════════════════════════════════════════════

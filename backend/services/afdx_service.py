@@ -4,11 +4,10 @@ Tracks: BAG enforcement, jitter, bandwidth, frame sequencing.
 """
 
 import logging
-import math
 import random
 import time
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 log = logging.getLogger("sentineltwin.afdx")
 

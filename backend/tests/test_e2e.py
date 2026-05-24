@@ -9,7 +9,6 @@ Run: pytest backend/tests/test_e2e.py -v --timeout=30
 import asyncio
 import json
 import time
-import uuid
 import requests
 import pytest
 
@@ -587,7 +586,7 @@ class TestPrometheus:
             "ai_confidence",
             "dispatch_readiness_score",
             "hash_chain_blocks_total",
-        ]), f"No SentinelTwin metrics found in /metrics output"
+        ]), "No SentinelTwin metrics found in /metrics output"
 
 
 # ══════════════════════════════════════════════════════════════════════════════

@@ -1,6 +1,6 @@
 """SentinelTwin — Cybersecurity Routes — Real Engine"""
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Dict
 from fastapi import APIRouter, Depends, Request
 from api.routes._auth_utils import get_current_user, require_role
 

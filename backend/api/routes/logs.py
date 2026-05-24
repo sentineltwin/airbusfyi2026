@@ -2,8 +2,8 @@
 import logging
 from collections import deque
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
-from fastapi import APIRouter, Depends, Request
+from typing import Dict, Optional
+from fastapi import APIRouter, Depends
 from api.routes._auth_utils import get_current_user
 
 router = APIRouter()
@@ -55,9 +55,9 @@ async def get_operational_logs(
     logs.reverse()  # Newest first
     
     if level and level != "ALL":
-        logs = [l for l in logs if l["level"] == level]
+        logs = [entry for entry in logs if entry["level"] == level]
     if source:
-        logs = [l for l in logs if source.lower() in l["source"].lower()]
+        logs = [entry for entry in logs if source.lower() in entry["source"].lower()]
         
     logs = logs[offset : offset + limit]
     

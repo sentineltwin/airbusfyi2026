@@ -5,10 +5,9 @@ Connection pooling, health checking, migration support
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Dict
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import AsyncAdaptedQueuePool
 from sqlalchemy import text
 from sqlalchemy.orm import declarative_base
 

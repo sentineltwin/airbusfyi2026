@@ -2,7 +2,7 @@
 import random
 from datetime import datetime, timedelta, timezone
 from typing import Dict
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from api.routes._auth_utils import get_current_user
 
 router = APIRouter()

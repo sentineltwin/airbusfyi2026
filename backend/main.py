@@ -7,7 +7,6 @@ EASA DO-326A / ED-202A Compliant
 import asyncio
 import logging
 import os
-import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
@@ -37,8 +36,6 @@ from api.routes import arinc, afdx
 from api.routes import logs as logs_route
 from api.routes.logs import install_log_handler
 from api.routes.websocket import broadcast_loop
-# AI alias router (fresh APIRouter so FastAPI doesn’t deduplicate against anomalies.router)
-_ai_router = None
 from core.config import settings
 from core.database import engine, Base
 from core.redis_client import redis_client
@@ -55,6 +52,9 @@ from services.afdx_service import AFDXMonitor
 from services.security_engine import CybersecurityEngine
 from services.persistence_service import PersistenceService
 from services.kafka_producer import KafkaEventProducer
+
+# AI alias router (fresh APIRouter so FastAPI doesn't deduplicate against anomalies.router)
+_ai_router = None
 
 # Prometheus metrics (optional — graceful if not installed)
 try:
@@ -424,10 +424,10 @@ def create_app() -> FastAPI:
                 pass
 
         # Dispatch readiness
-        dispatch_svc = getattr(request.app.state, "persistence_service", None)
+        _dispatch_svc = getattr(request.app.state, "persistence_service", None)
         if sensor_engine and ai_engine_inst:
             s_stats = sensor_engine.get_stats()
-            a_status = ai_engine_inst.get_status()
+            _a_status = ai_engine_inst.get_status()
             health = s_stats.get("healthy_count", 0) / max(1, s_stats.get("total_sensors", 8192)) * 100
             dispatch_readiness_score.set(round(health, 1))
 

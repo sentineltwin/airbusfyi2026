@@ -5,8 +5,6 @@ All tests pass with real implementations — no mocks for core logic.
 """
 
 import asyncio
-import hashlib
-import math
 import time
 import uuid
 import sys
@@ -26,7 +24,7 @@ from services.sensor_engine import (
     SensorState, ATA_CHAPTERS,
 )
 from services.ai_engine import (
-    SparseAutoencoder, ATAAggregator, StatisticalDetector, AIAnomalyEngine,
+    SparseAutoencoder, ATAAggregator, StatisticalDetector,
 )
 from services.core_services import (
     HashChainService, ECAMEngine, DigitalTwinEngine,

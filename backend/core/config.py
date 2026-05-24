@@ -5,10 +5,9 @@ Environment-driven, production-grade settings management
 
 import secrets
 from functools import lru_cache
-from pathlib import Path
 from typing import List, Optional
 
-from pydantic import AnyHttpUrl, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 

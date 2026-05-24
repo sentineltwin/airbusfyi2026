@@ -5,12 +5,11 @@ Label encoding: 32-bit word = 8-bit label + 2-bit SSM + 19-bit data + 2-bit SDI 
 """
 
 import logging
-import math
 import random
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 log = logging.getLogger("sentineltwin.arinc429")
 
@@ -353,8 +352,8 @@ class ARINC429Simulator:
             "active_labels": len(self.LABEL_TABLE),
             "active_faults": len(self._active_faults),
             "faulted_labels": [
-                {"label": f"{l:03o}", "fault": f}
-                for l, f in self._active_faults.items()
+                {"label": f"{label:03o}", "fault": fault}
+                for label, fault in self._active_faults.items()
             ],
             "bus_speed_kbps": 12.5,
             "protocol": "BIPOLAR_RZ",

@@ -8,7 +8,6 @@ import asyncio
 import hashlib
 import logging
 import math
-import random
 import time
 from collections import deque
 from dataclasses import dataclass, field
@@ -132,7 +131,7 @@ class SparseAutoencoder:
 
             # Sparsity penalty (KL divergence on latent activations)
             rho_hat = np.mean(np.abs(latent))
-            sparsity_loss = self.sparsity_weight * (
+            _sparsity_loss = self.sparsity_weight * (
                 self.sparsity_target * np.log(self.sparsity_target / (rho_hat + 1e-8)) +
                 (1 - self.sparsity_target) * np.log(
                     (1 - self.sparsity_target) / (1 - rho_hat + 1e-8)
